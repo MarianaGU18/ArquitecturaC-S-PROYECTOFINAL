@@ -1,0 +1,18 @@
+# Archivos binarios
+*.o
+
+# Archivos de log o salida
+*.log
+*.out
+*.txt
+
+# Archivos temporales del sistema o editores
+*~
+*.swp
+.DS_Store
+
+# Carpetas ocultas comunes
+.vscode/
+.idea/
+cliente
+servidor
