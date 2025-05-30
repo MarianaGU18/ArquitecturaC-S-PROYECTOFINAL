@@ -11,39 +11,60 @@
 #include <limits.h>
 
 #define BUF_SIZE 1024
+#define END_MARKER "__END__"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     struct sockaddr_in server;
     struct hostent *sp;
     int sd, n;
     char buf_peticion[BUF_SIZE];
     char buf_respuesta[BUF_SIZE];
 
-    if (argc != 3) {
+    FILE *log = fopen("registro_cliente.txt", "a");
+    if (!log)
+    {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
+
+    if (argc != 3)
+    {
         fprintf(stderr, "Uso: %s <IP/host> <puerto>\n", argv[0]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     sd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sd < 0)
+    {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
 
     memset(&server, 0, sizeof(server));
     server.sin_family = AF_INET;
-    server.sin_port = htons((u_short) atoi(argv[2]));
+    server.sin_port = htons((unsigned short)atoi(argv[2]));
     sp = gethostbyname(argv[1]);
 
-    if (!sp) {
+    if (!sp)
+    {
         perror("gethostbyname");
         exit(1);
     }
 
-    memcpy(&server.sin_addr, sp->h_addr, sp->h_length);
+    memcpy(&server.sin_addr.s_addr, sp->h_addr_list[0], sp->h_length);
 
-    if (connect(sd, (struct sockaddr *) &server, sizeof(server)) < 0) {
+    if (connect(sd, (struct sockaddr *)&server, sizeof(server)) < 0)
+    {
         perror("connect");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
-    while (1) {
+    printf("Conectado al servidor.\n");
+    fprintf(log, "Conectado al servidor %s:%s\n", argv[1], argv[2]);
+
+    while (1)
+    {
         memset(buf_peticion, 0, BUF_SIZE);
         printf("\n>> Comando: ");
         fgets(buf_peticion, BUF_SIZE, stdin);
@@ -51,22 +72,47 @@ int main(int argc, char *argv[]) {
         if (strncmp(buf_peticion, "salir", 5) == 0 || strncmp(buf_peticion, "exit", 4) == 0)
             break;
 
-        send(sd, buf_peticion, strlen(buf_peticion), 0);
+        // Guardar el comando enviado
+        fprintf(log, "\n>> Comando enviado: %s", buf_peticion);
 
-// Nueva forma de recibir múltiples bloques hasta detectar __END__
-while (1) {
-    n = recv(sd, buf_respuesta, sizeof(buf_respuesta)-1, 0);
-    if (n <= 0) break;
+        // Enviar comando al servidor
+        if (send(sd, buf_peticion, strlen(buf_peticion), 0) < 0)
+        {
+            perror("send");
+            break;
+        }
 
-    buf_respuesta[n] = '\0';
-    if (strcmp(buf_respuesta, "__END__\n") == 0) break;
+        // Leer respuesta del servidor hasta recibir el marcador de fin
+        while (1)
+        {
+            memset(buf_respuesta, 0, BUF_SIZE);
+            n = recv(sd, buf_respuesta, BUF_SIZE - 1, 0);
+            if (n <= 0)
+            {
+                perror("recv");
+                break;
+            }
+            buf_respuesta[n] = '\0';
 
-    printf("%s", buf_respuesta); // o write(1, buf_respuesta, n);
-}
+            // Verificar si contiene el marcador de fin
+            if (strstr(buf_respuesta, END_MARKER) != NULL)
+            {
+                char *pos = strstr(buf_respuesta, END_MARKER);
+                *pos = '\0';
+                printf("%s", buf_respuesta);
+                fprintf(log, "%s", buf_respuesta);
+                break;
+            }
 
+            printf("%s", buf_respuesta);
+            fprintf(log, "%s", buf_respuesta);
+        }
     }
 
     printf("\nConexión cerrada.\n");
+    fprintf(log, "\nConexión cerrada.\n");
+
     close(sd);
+    fclose(log);
     return 0;
 }
