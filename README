@@ -1,0 +1,72 @@
+# Proyecto Final: Arquitectura Cliente-Servidor
+
+
+| ![Logo del proyecto](img/logo.png) | Este proyecto implementa una arquitectura cliente-servidor en lenguaje C, donde el cliente envía comandos de Linux al servidor para su ejecución. La salida se muestra en consola y se guarda en un archivo. |
+|------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+## Estructura del Proyecto
+- `cliente.c`            # Código fuente del cliente que se conecta al servidor 
+- `servidor.c`           # Código fuente del servidor que ejecuta comandos
+- `registro_cliente.txt` # Archivo con el historial de comandos enviados y respuestas recibidas
+- `README.md`            # Documentación del proyecto
+- `.gitignore`           # Lista de archivos que Git debe ignorar (binarios, temporales, etc.)
+
+## Instrucciones de Uso
+### 1. Compilar los programas
+
+```bash
+gcc servidor.c -o servidor
+gcc cliente.c -o cliente
+```
+
+### 2. Ejecutar el servidor
+
+```bash
+./servidor 12345
+```
+
+### 3. Ejecutar el cliente
+
+```bash
+./cliente localhost 12345
+```
+> [!NOTE]
+> También puedes usar `127.0.0.1` en lugar de `localhost`.
+
+
+### 4. Interactuar con comandos
+
+Puedes ejecutar comandos como:
+
+* `ls -l`
+* `whoami`
+* `cal`
+* `df -h`
+* `cat archivo.txt`
+
+Cada comando ejecutado en el cliente:
+
+* Se envía al servidor
+* Se muestra en pantalla
+* Se guarda automáticamente en `registro_cliente.txt`
+
+### 5. Finalizar la sesión
+
+Escribe `salir` o `exit` para cerrar la conexión.
+
+## Requisitos
+
+* Sistema operativo tipo UNIX (Linux o macOS)
+* Compilador GCC
+* Acceso a una terminal
+
+## Documentación
+
+Puedes consultar el reporte completo del proyecto en Overleaf:
+
+📄 [Ver reporte en Overleaf](https://www.overleaf.com/read/xcjhgmntzgzw#da095a)
+
+## Créditos
+* Celis Hernández Ronie
+* Gómez Urbano Mariana
+
